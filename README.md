@@ -1,6 +1,25 @@
-# Project Title
+# Survivor Puzzle from Episode S48E2
 
-A brief description of what this project does and who it's for.
+Exploration of the puzzle of 15 scrambled blocks.
+
+The initial board state as represented on the show:
+
+```
+ 2  1  4  3  5
+ 7  6  9  8 10
+12 11 14 13 15
+```
+
+The goal being to reorder them in strict numerical
+order.
+
+The operations allowed them to push any row to the left, freeing up one "tile".  That tile
+could then be placed at the end of any other row.
+
+If it released a tile by doing so, they then had to put *that* tile onto some other row.  If they placed
+the freed tile on a row that only had 4 tiles on it,
+they would then be free to push (from the right)
+any other row.
 
 ## Installation
 
