@@ -4,11 +4,7 @@ Exploration of the puzzle of 15 scrambled blocks.
 
 The initial board state as represented on the show:
 
-```
- 2  1  4  3  5
- 7  6  9  8 10
-12 11 14 13 15
-```
+![Start Board](docs/start_board.jpg)
 
 The goal being to reorder them in strict numerical
 order.
