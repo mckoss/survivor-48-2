@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 from sympy.combinatorics import Permutation
+import heapq
 
 # Single row rotations
 p1 = Permutation(1, 5, 4, 3, 2)
@@ -44,23 +45,45 @@ def distance(board):
     deltas = [abs(i - j) for i, j in zip(board.array_form[1:-1], range(1, 16))]
     return sum(deltas)
 
-def search(board, depth=1, max_depth=3, best_distance=None):
-    if best_distance is None:
-        best_distance = distance(board)
-    if depth > max_depth:
-        return best_distance
-    for name, perm in named_permutations:
-        new_board = board * perm
-        current_distance = distance(new_board)
-        if current_distance < best_distance:
-            best_distance = current_distance
-        print(f"Depth {depth} - Board after applying {name}:\n{board_to_string(new_board)}")
-        best_distance = search(new_board, depth + 1, max_depth, best_distance)
-    return best_distance
+def search(board, max_depth=3):
+    frontier = [(distance(board), 0, tuple(board.array_form))]
+    explored = set()
+    best_distance = distance(board)
+    positions_searched = 0
+
+    while frontier:
+        current_distance, depth, current_board_tuple = heapq.heappop(frontier)
+        if depth > max_depth:
+            continue
+        if current_board_tuple in explored:
+            continue
+        explored.add(current_board_tuple)
+        current_board = Permutation(list(current_board_tuple))
+
+        for name, perm in named_permutations:
+            new_board = current_board * perm
+
+            if tuple(new_board.array_form) in explored:
+                continue
+
+            new_distance = distance(new_board)
+            if new_distance < best_distance:
+                best_distance = new_distance
+                print(f"Depth {depth + 1} - Board after applying {name}:\n{board_to_string(new_board)}")
+
+            heapq.heappush(frontier, (new_distance, depth + 1, tuple(new_board.array_form)))
+
+            positions_searched += 1
+
+            if positions_searched % 10000 == 0:
+                distances = [item[0] for item in frontier]
+                print(f"Progress: {positions_searched:,} positions examined")
+                print(f"Current distance range of {len(distances):,} boards remain in frontier: {min(distances)} - {max(distances)}")
+
 
 def main():
     print(f"Initial board:\n{board_to_string(board)}")
-    search(board, 1, 5)
+    search(board, 10)
 
 if __name__ == "__main__":
     main()
