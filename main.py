@@ -43,7 +43,7 @@ def distance(board):
     return sum(deltas)
 
 def search(board, max_depth=3):
-    frontier = [(distance(board), 0, tuple(board.array_form), [])]
+    frontier = [(0, distance(board), tuple(board.array_form), [])]
     explored = set()
     best_distance = distance(board)
     best_sequence = []
@@ -51,10 +51,8 @@ def search(board, max_depth=3):
     positions_searched = 0
 
     while frontier:
-        current_distance, depth, current_board_tuple, sequence = heapq.heappop(frontier)
-        if depth > max_depth:
-            continue
-        # BUG: Is this ever possible?
+        depth, current_distance, current_board_tuple, sequence = heapq.heappop(frontier)
+        # Shouldn't we not every queue an already queue board?
         if current_board_tuple in explored:
             continue
 
@@ -78,14 +76,21 @@ def search(board, max_depth=3):
             if new_distance == 0:
                 return new_sequence
 
-            heapq.heappush(frontier, (new_distance, depth + 1, tuple(new_board.array_form), new_sequence))
+            if depth + 1 < max_depth:
+                heapq.heappush(frontier, (depth + 1, new_distance, tuple(new_board.array_form), new_sequence))
 
             positions_searched += 1
 
             if positions_searched % 10000 == 0:
-                distances = [item[0] for item in frontier]
                 print(f"Progress: {positions_searched:,} positions examined (at depth {depth})")
-                print(f"Current distance range of {len(distances):,} boards remaining in frontier: {min(distances)} - {max(distances)}")
+                min_dist = 9999
+                max_dist = -1
+                for i in range(len(frontier)):
+                    if frontier[i][1] < min_dist:
+                        min_dist = frontier[i][1]
+                    if frontier[i][1] > max_dist:
+                        max_dist = frontier[i][1]
+                print(f"Current distance range of {len(frontier):,} boards remaining in frontier: {min_dist} - {max_dist}")
                 if positions_searched % 100000 == 0:
                     print(f"Current best sequence: {' -> '.join(best_sequence)}")
                     print(f"Current best distance: {best_distance}")
