@@ -3,24 +3,21 @@
 from sympy.combinatorics import Permutation
 import heapq
 
-# Single row rotations
-p1 = Permutation(1, 5, 4, 3, 2)
-p2 = Permutation(6, 10, 9, 8, 7)
-p3 = Permutation(11, 15, 14, 13, 12)
+named_permutations = (
+    ('P1', Permutation(1, 5, 4, 3, 2)),
+    ('P2', Permutation(6, 10, 9, 8, 7)),
+    ('P3', Permutation(11, 15, 14, 13, 12)),
+    ('P12', Permutation(1, 10, 9, 8, 7, 6, 5, 4, 3, 2)),
+    # Push 2nd row deeper before placing tile in first row
+    ('P12+', Permutation(1, 9, 7, 5, 4, 3, 2)(10, 8, 6)),
+    ('P12++', Permutation(1, 8, 6, 9, 5, 4, 3, 2)(7, 10)),
+    ('P12+++', Permutation(1, 7, 9, 5, 4, 3, 2)(6, 8, 10)),
+    ('P12++++', Permutation(1, 6, 7, 8, 9, 10, 5, 4, 3, 2)),
+    # ('P13', Permutation(1, 15, 14, 13, 12, 11, 5, 4, 3, 2)),
+    ('P23', Permutation(6, 15, 14, 13, 12, 11, 10, 9, 8, 7)),
 
-# Push tile from one row to another
-p12 = Permutation(1, 10, 9, 8, 7, 6, 5, 4, 3, 2)
-p13 = Permutation(1, 15, 14, 13, 12, 11, 5, 4, 3, 2)
-p23 = Permutation(6, 15, 14, 13, 12, 11, 10, 9, 8, 7)
-
-named_permutations = [
-    ('p1', p1),
-    ('p2', p2),
-    ('p3', p3),
-    ('p12', p12),
-    ('p13', p13),
-    ('p23', p23)
-]
+    ('P123', Permutation(1, 10, 9, 8, 7, 6, 15, 14, 13, 12, 11, 5, 4, 3, 2)),
+)
 
 # Cycle notation for the starting position
 board = Permutation([[1, 2], [3, 4], [5], [6, 7], [8, 9], [10], [11, 12], [13, 14], [15]])
@@ -46,22 +43,27 @@ def distance(board):
     return sum(deltas)
 
 def search(board, max_depth=3):
-    frontier = [(distance(board), 0, tuple(board.array_form))]
+    frontier = [(distance(board), 0, tuple(board.array_form), [])]
     explored = set()
     best_distance = distance(board)
+    best_sequence = []
+
     positions_searched = 0
 
     while frontier:
-        current_distance, depth, current_board_tuple = heapq.heappop(frontier)
+        current_distance, depth, current_board_tuple, sequence = heapq.heappop(frontier)
         if depth > max_depth:
             continue
+        # BUG: Is this ever possible?
         if current_board_tuple in explored:
             continue
+
         explored.add(current_board_tuple)
         current_board = Permutation(list(current_board_tuple))
 
         for name, perm in named_permutations:
             new_board = current_board * perm
+            new_sequence = sequence + [name]
 
             if tuple(new_board.array_form) in explored:
                 continue
@@ -69,21 +71,31 @@ def search(board, max_depth=3):
             new_distance = distance(new_board)
             if new_distance < best_distance:
                 best_distance = new_distance
-                print(f"Depth {depth + 1} - Board after applying {name}:\n{board_to_string(new_board)}")
+                best_sequence = new_sequence
+                print(f"Depth {depth + 1}:\n{board_to_string(new_board)}")
+                print(f"Permutation Sequence: {' -> '.join(best_sequence)}")
 
-            heapq.heappush(frontier, (new_distance, depth + 1, tuple(new_board.array_form)))
+            if new_distance == 0:
+                return new_sequence
+
+            heapq.heappush(frontier, (new_distance, depth + 1, tuple(new_board.array_form), new_sequence))
 
             positions_searched += 1
 
             if positions_searched % 10000 == 0:
                 distances = [item[0] for item in frontier]
-                print(f"Progress: {positions_searched:,} positions examined")
-                print(f"Current distance range of {len(distances):,} boards remain in frontier: {min(distances)} - {max(distances)}")
+                print(f"Progress: {positions_searched:,} positions examined (at depth {depth})")
+                print(f"Current distance range of {len(distances):,} boards remaining in frontier: {min(distances)} - {max(distances)}")
+                if positions_searched % 100000 == 0:
+                    print(f"Current best sequence: {' -> '.join(best_sequence)}")
+                    print(f"Current best distance: {best_distance}")
 
+    return best_sequence
 
 def main():
     print(f"Initial board:\n{board_to_string(board)}")
-    search(board, 10)
+    best_sequence = search(board, 20)
+    print(f"Best sequence found: {' -> '.join(best_sequence)}")
 
 if __name__ == "__main__":
     main()
