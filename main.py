@@ -103,14 +103,18 @@ def search(board, max_depth=3):
 
             if positions_searched % 10000 == 0:
                 print(f"Progress: {positions_searched:,} positions examined (at depth {depth})")
-                min_dist = 9999
-                max_dist = -1
+                min_dist = min_depth = 9999
+                max_dist = max_depth = -1
                 for i in range(len(frontier)):
                     if frontier[i][0] < min_dist:
                         min_dist = frontier[i][0]
                     if frontier[i][0] > max_dist:
                         max_dist = frontier[i][0]
-                print(f"Current distance range of {len(frontier):,} boards remaining in frontier: {min_dist} - {max_dist}")
+                    if frontier[i][1] < min_depth:
+                        min_depth = frontier[i][1]
+                    if frontier[i][1] > max_depth:
+                        max_depth = frontier[i][1]
+                print(f"Current distance range of {len(frontier):,} boards remaining in frontier: {min_dist} - {max_dist} at depths {min_depth} - {max_depth}")
                 if positions_searched % 100000 == 0:
                     print(f"Current best sequence ({len(best_sequence)-1} steps): {' -> '.join(best_sequence)}")
                     print(f"Current best distance: {best_distance}")
@@ -120,7 +124,7 @@ def search(board, max_depth=3):
 
 def main():
     print(f"Initial board:\n{board_to_string(board)}")
-    search(board, 500)
+    search(board, 200)
 
 if __name__ == "__main__":
     main()
