@@ -8,19 +8,21 @@ import heapq
 # empty slot left vacant by shifting the row left.
 
 dumping_row_perms = (
-    ('P1-', Permutation(0, 5, 4, 3, 2, 1)),
-    ('P2-', Permutation(0, 10, 9, 8, 7, 6)),
-    ('P3-', Permutation(0, 15, 14, 13, 12, 11))
+    ('1', Permutation(0, 5, 4, 3, 2, 1)),
+    ('2', Permutation(0, 10, 9, 8, 7, 6)),
+    ('3', Permutation(0, 15, 14, 13, 12, 11))
 )
 
 filling_row_perms = (
-    ('P1+', Permutation(0, 5)),
-    ('P2+', Permutation(0, 10)),
-    ('P3+', Permutation(0, 15))
+    ('1!', Permutation(0, 5)),
+    ('2!', Permutation(0, 10)),
+    ('3!', Permutation(0, 15))
 )
 
 # Cycle notation for the starting position
 board = Permutation([[1, 2], [3, 4], [5], [6, 7], [8, 9], [10], [11, 12], [13, 14], [15]])
+# board = Permutation([[1, 2]], size=16)
+# board = Permutation([[5, 4, 3, 2, 1]], size=16)
 
 def board_to_string(board):
     a = board.array_form
@@ -57,10 +59,14 @@ def slide_row_perm(board, row):
         return dumping_row_perms[row]
 
 def search(board, max_depth=3):
-    frontier = [(distance(board), 0, tuple(board.array_form), [])]
+    best_distance = distance(board)
+    frontier = [(distance(board), 0, tuple(board.array_form), [f"[{best_distance}]"])]
     explored = set()
     best_distance = distance(board)
-    best_sequence = []
+    best_sequence = frontier[0][3]
+
+    if best_distance == 0:
+        return best_sequence
 
     positions_searched = 0
 
@@ -75,17 +81,17 @@ def search(board, max_depth=3):
 
         for name, perm in (slide_row_perm(current_board, row) for row in range(3)):
             new_board = current_board * perm
-            new_sequence = sequence + [name]
+            new_distance = distance(new_board)
+            new_sequence = sequence + [f"{name}[{new_distance}]"]
 
             if tuple(new_board.array_form) in explored:
                 continue
 
-            new_distance = distance(new_board)
             if new_distance < best_distance:
                 best_distance = new_distance
                 best_sequence = new_sequence
                 print(f"Depth {depth + 1}:\n{board_to_string(new_board)}")
-                print(f"Permutation Sequence: {' -> '.join(best_sequence)}")
+                print(f"Permutation Sequence ({len(best_sequence)-1} steps): {' -> '.join(best_sequence)}")
 
             if new_distance == 0:
                 return new_sequence
@@ -106,17 +112,15 @@ def search(board, max_depth=3):
                         max_dist = frontier[i][0]
                 print(f"Current distance range of {len(frontier):,} boards remaining in frontier: {min_dist} - {max_dist}")
                 if positions_searched % 100000 == 0:
-                    print(f"Current best sequence: {' -> '.join(best_sequence)}")
+                    print(f"Current best sequence ({len(best_sequence)-1} steps): {' -> '.join(best_sequence)}")
                     print(f"Current best distance: {best_distance}")
                     print(f"Current board: {board_to_string(current_board)}")
-                    print(f"Current sequence: {' -> '.join(sequence)}")
 
     return best_sequence
 
 def main():
     print(f"Initial board:\n{board_to_string(board)}")
-    best_sequence = search(board, 500)
-    print(f"Best sequence found: {' -> '.join(best_sequence)}")
+    search(board, 500)
 
 if __name__ == "__main__":
     main()
